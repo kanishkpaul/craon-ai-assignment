@@ -19,11 +19,13 @@ export function formatClip(clip: Clip) {
 export function formatRun(run: PromptRun) {
   const header = [
     `Run: ${run.id}`,
+    `Planner: ${run.planner}${run.plannerNote ? ` (${run.plannerNote})` : ""}`,
     `Platform: ${run.intent.platform}`,
     `Aspect: ${run.intent.aspectRatio}`,
     `Pace: ${run.intent.pace}`,
     `Tone: ${run.intent.tone}`,
-    `Target: ${run.intent.targetSeconds}s`
+    `Target: ${run.intent.targetSeconds}s`,
+    `Objective: ${run.trimIntent.objective}`
   ];
   const decisions = run.decisions.map((decision, index) => {
     const clips = decision.clipIds.length ? decision.clipIds.join(", ") : "no clips";
@@ -58,6 +60,8 @@ export function formatHelp() {
     "  init [name] --brief <text>",
     "  add <path> --label <text> --duration <seconds> --role <role> --mood <mood> --notes <text>",
     "  ask <prompt>",
+    "  ask <prompt> --ai",
+    "  ask <prompt> --no-ai",
     "  plan",
     "  timeline",
     "  export",
@@ -65,10 +69,13 @@ export function formatHelp() {
     "  status",
     "  brief <text>",
     "  demo",
+    "  samples --write",
+    "  llama",
     "",
     "Examples:",
     "  npm run cli -- init LaunchCut --brief \"Turn raw founder footage into publishable edits\"",
     "  npm run cli -- add ./clip.mov --label \"Founder explains the shift\" --duration 18 --role hook --mood focused",
-    "  npm run cli -- ask \"Make a punchy 30 second reel with captions and warm color\""
+    "  npm run cli -- ask \"Make a punchy 30 second reel with captions and warm color\" --ai",
+    "  npm run samples"
   ].join("\n");
 }

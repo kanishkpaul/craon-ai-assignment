@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "cli": "node dist/index.js",
+    "llama": "node dist/index.js llama",
+    "samples": "npm run build && node dist/index.js samples --write",
     "test": "vitest run"
   },
   "dependencies": {},

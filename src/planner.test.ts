@@ -50,13 +50,20 @@ describe("inferIntent", () => {
     expect(intent.pace).toBe("slow burn");
     expect(intent.wantsColorGrade).toBe(true);
   });
+
+  it("clamps unrealistic explicit durations", () => {
+    expect(inferIntent("Make a 2 second short").targetSeconds).toBe(5);
+    expect(inferIntent("Make a 999 second YouTube episode").targetSeconds).toBe(600);
+  });
 });
 
 describe("planPrompt", () => {
   it("creates a complete edit plan with ordered decisions", () => {
     const run = planPrompt("Make a punchy 30 second reel with captions", clips);
     expect(run.decisions.length).toBeGreaterThanOrEqual(5);
-    expect(run.decisions[0]?.kind).toBe("arrange");
+    expect(run.planner).toBe("heuristic");
+    expect(run.decisions[0]?.kind).toBe("intent");
+    expect(run.decisions[1]?.kind).toBe("arrange");
     expect(run.decisions.some((decision) => decision.kind === "caption")).toBe(true);
     expect(run.decisions.at(-1)?.kind).toBe("export");
   });

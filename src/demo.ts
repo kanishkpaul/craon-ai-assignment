@@ -14,52 +14,54 @@ export function createDemoProject(): Project {
   };
 }
 
+const sampleVideo = "assets/footage/sample-road-360p.mp4";
+
 function createDemoClips(): Clip[] {
   return [
     {
       id: createId("clip", "founder hook"),
-      path: "footage/founder-hook.mov",
-      label: "Founder names the editing bottleneck",
-      duration: 16,
+      path: sampleVideo,
+      label: "Opening motion establishes the edit",
+      duration: 5.7,
       role: "hook",
       mood: "focused",
-      notes: "Strong opening claim with direct camera energy"
+      notes: "Sample footage used as the first attention beat"
     },
     {
       id: createId("clip", "timeline mess"),
-      path: "footage/timeline-mess.mov",
-      label: "Timeline shows manual editing drag",
-      duration: 22,
+      path: sampleVideo,
+      label: "Movement provides proof of source material",
+      duration: 5.7,
       role: "proof",
       mood: "raw",
-      notes: "Screen capture of cuts, captions, and color work taking too long"
+      notes: "Same sample asset treated as a second logical clip"
     },
     {
       id: createId("clip", "prompt result"),
-      path: "footage/prompt-result.mov",
-      label: "Prompt turns into a clean sequence",
-      duration: 19,
+      path: sampleVideo,
+      label: "Cutaway supports the prompt result",
+      duration: 5.7,
       role: "proof",
       mood: "cinematic",
-      notes: "Shows chat-driven changes landing in the edit"
+      notes: "Sample clip stands in for generated edit proof"
     },
     {
       id: createId("clip", "creator reaction"),
-      path: "footage/creator-reaction.mov",
-      label: "Creator reacts to final cut",
-      duration: 11,
+      path: sampleVideo,
+      label: "Visual breath before the close",
+      duration: 5.7,
       role: "texture",
       mood: "warm",
-      notes: "Human signal after the workflow shift"
+      notes: "Texture beat for pacing and transition"
     },
     {
       id: createId("clip", "try craon"),
-      path: "footage/try-craon.mov",
-      label: "Try Craon call to action",
-      duration: 7,
+      path: sampleVideo,
+      label: "Final motion lands the call to action",
+      duration: 5.7,
       role: "cta",
       mood: "focused",
-      notes: "Simple close with product name"
+      notes: "Closing beat for handoff output"
     }
   ];
 }

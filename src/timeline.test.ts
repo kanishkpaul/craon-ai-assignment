@@ -19,7 +19,7 @@ describe("buildTimeline", () => {
     const run = planPrompt("Make a 30 second reel", project.clips);
     const csv = timelineToCsv(buildTimeline(project, run));
     expect(csv).toContain("index,clip_id,label");
-    expect(csv).toContain("Founder names the editing bottleneck");
+    expect(csv).toContain("Opening motion establishes the edit");
   });
 
   it("keeps unselected clips out of the generated timeline", () => {

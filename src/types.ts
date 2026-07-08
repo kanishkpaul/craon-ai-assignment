@@ -10,6 +10,7 @@ export type ClipMood =
   | "focused";
 
 export type EditKind =
+  | "intent"
   | "arrange"
   | "trim"
   | "caption"
@@ -21,6 +22,8 @@ export type EditKind =
 export type Platform = "shorts" | "reels" | "youtube" | "linkedin" | "cinematic";
 
 export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5";
+
+export type PlannerMode = "llama.cpp" | "heuristic";
 
 export type Clip = {
   id: string;
@@ -43,6 +46,21 @@ export type PromptIntent = {
   wantsColorGrade: boolean;
 };
 
+export type TrimIntent = {
+  objective: string;
+  platform: Platform;
+  aspectRatio: AspectRatio;
+  pace: PromptIntent["pace"];
+  tone: ClipMood;
+  targetSeconds: number;
+  preserve: string[];
+  remove: string[];
+  semanticPriorities: string[];
+  operations: string[];
+  customDirectives: string[];
+  confidence: number;
+};
+
 export type EditDecision = {
   id: string;
   kind: EditKind;
@@ -56,6 +74,9 @@ export type PromptRun = {
   id: string;
   prompt: string;
   createdAt: string;
+  planner: PlannerMode;
+  plannerNote?: string;
+  trimIntent: TrimIntent;
   intent: PromptIntent;
   decisions: EditDecision[];
 };

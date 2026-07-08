@@ -2,8 +2,10 @@ import { createId } from "./ids.js";
 import { createDemoProject } from "./demo.js";
 import { exportRun } from "./exporter.js";
 import { formatClip, formatHelp, formatProjectStatus, formatReview, formatRun, formatTimeline } from "./format.js";
+import { checkLlama, planPromptWithLlama } from "./llama.js";
 import { planPrompt } from "./planner.js";
 import { reviewProject } from "./review.js";
+import { formatSampleOutputs, writeSampleOutputs } from "./samples.js";
 import { createProject, ensureProject, loadProject, saveProject } from "./storage.js";
 import { buildTimeline } from "./timeline.js";
 import type { Clip, ClipMood, ClipRole, Project } from "./types.js";
@@ -18,12 +20,16 @@ const roles = new Set<ClipRole>(["hook", "proof", "texture", "cta", "broll"]);
 const moods = new Set<ClipMood>(["raw", "warm", "urgent", "cinematic", "quiet", "playful", "focused"]);
 
 export async function runCli(args: string[], cwd: string) {
+  return runCliWithEnv(args, cwd, process.env);
+}
+
+export async function runCliWithEnv(args: string[], cwd: string, env: Record<string, string | undefined>) {
   const parsed = parseArgs(args);
-  const output = await dispatch(parsed, cwd);
+  const output = await dispatch(parsed, cwd, env);
   return output;
 }
 
-async function dispatch(parsed: ParsedArgs, cwd: string) {
+async function dispatch(parsed: ParsedArgs, cwd: string, env: Record<string, string | undefined>) {
   if (!parsed.command || parsed.command === "help") {
     return formatHelp();
   }
@@ -34,7 +40,7 @@ async function dispatch(parsed: ParsedArgs, cwd: string) {
     return addCommand(parsed, cwd);
   }
   if (parsed.command === "ask") {
-    return askCommand(parsed, cwd);
+    return askCommand(parsed, cwd, env);
   }
   if (parsed.command === "plan") {
     return planCommand(cwd);
@@ -56,6 +62,12 @@ async function dispatch(parsed: ParsedArgs, cwd: string) {
   }
   if (parsed.command === "demo") {
     return demoCommand(cwd);
+  }
+  if (parsed.command === "samples") {
+    return samplesCommand(parsed, cwd);
+  }
+  if (parsed.command === "llama") {
+    return llamaCommand(env);
   }
   throw new Error(`Unknown command: ${parsed.command}`);
 }
@@ -120,17 +132,30 @@ async function addCommand(parsed: ParsedArgs, cwd: string) {
   return `Added clip: ${formatClip(clip)}`;
 }
 
-async function askCommand(parsed: ParsedArgs, cwd: string) {
+async function askCommand(parsed: ParsedArgs, cwd: string, env: Record<string, string | undefined>) {
   const project = await ensureProject(cwd);
   const prompt = parsed.values.join(" ").trim();
   if (!prompt) {
     throw new Error("Missing prompt.");
   }
-  const run = planPrompt(prompt, project.clips);
+  if (!project.clips.length) {
+    throw new Error("Add at least one clip before planning an edit.");
+  }
+  const run = await planPromptForCommand(prompt, project.clips, parsed, env);
   project.runs.push(run);
   touch(project);
   await saveProject(cwd, project);
   return formatRun(run);
+}
+
+async function planPromptForCommand(prompt: string, clips: Clip[], parsed: ParsedArgs, env: Record<string, string | undefined>) {
+  if (parsed.flags.has("no-ai")) {
+    return planPrompt(prompt, clips);
+  }
+  if (parsed.flags.has("ai") || env.LLAMA_CPP_ENABLED === "1") {
+    return planPromptWithLlama(prompt, clips, env);
+  }
+  return planPrompt(prompt, clips);
 }
 
 async function planCommand(cwd: string) {
@@ -198,6 +223,24 @@ async function demoCommand(cwd: string) {
   project.updatedAt = new Date().toISOString();
   await saveProject(cwd, project);
   return [`Created demo project: ${project.name}`, "", formatRun(run)].join("\n");
+}
+
+async function samplesCommand(parsed: ParsedArgs, cwd: string) {
+  if (parsed.flags.has("write")) {
+    const path = await writeSampleOutputs(cwd);
+    return `Wrote sample outputs: ${path}`;
+  }
+  return formatSampleOutputs();
+}
+
+async function llamaCommand(env: Record<string, string | undefined>) {
+  try {
+    await checkLlama(env);
+    return "llama.cpp server reachable";
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "llama.cpp server unreachable";
+    return `llama.cpp server unavailable: ${message}`;
+  }
 }
 
 function getFlag(parsed: ParsedArgs, key: string, fallback: string) {
