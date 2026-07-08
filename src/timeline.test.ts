@@ -21,4 +21,31 @@ describe("buildTimeline", () => {
     expect(csv).toContain("index,clip_id,label");
     expect(csv).toContain("Founder names the editing bottleneck");
   });
+
+  it("keeps unselected clips out of the generated timeline", () => {
+    const project = createDemoProject();
+    project.clips.push(
+      {
+        id: "clip-extra-one",
+        path: "extra-one.mov",
+        label: "Extra one",
+        duration: 20,
+        role: "broll",
+        mood: "raw",
+        notes: ""
+      },
+      {
+        id: "clip-extra-two",
+        path: "extra-two.mov",
+        label: "Extra two",
+        duration: 20,
+        role: "broll",
+        mood: "raw",
+        notes: ""
+      }
+    );
+    const run = planPrompt("Make a 30 second reel", project.clips);
+    const timeline = buildTimeline(project, run);
+    expect(timeline.length).toBeLessThan(project.clips.length);
+  });
 });

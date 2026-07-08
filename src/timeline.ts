@@ -55,10 +55,10 @@ function orderedClips(clips: Clip[], run: PromptRun) {
   const clipMap = new Map(clips.map((clip) => [clip.id, clip]));
   const arrange = run.decisions.find((decision) => decision.kind === "arrange");
   const order = Array.isArray(arrange?.payload.order) ? arrange.payload.order : run.decisions.flatMap((decision) => decision.clipIds);
-  const ordered = order.map((id) => clipMap.get(id)).filter((clip): clip is Clip => Boolean(clip));
-  const seen = new Set(ordered.map((clip) => clip.id));
-  const rest = clips.filter((clip) => !seen.has(clip.id));
-  return [...ordered, ...rest];
+  const ordered = unique(order)
+    .map((id) => clipMap.get(id))
+    .filter((clip): clip is Clip => Boolean(clip));
+  return ordered.length ? ordered : clips;
 }
 
 function sourceStart(clip: Clip) {
@@ -94,4 +94,8 @@ function csvCell(value: string | number) {
     return `"${text.replaceAll("\"", "\"\"")}"`;
   }
   return text;
+}
+
+function unique(values: string[]) {
+  return [...new Set(values)];
 }
