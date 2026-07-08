@@ -1,4 +1,4 @@
-import type { Clip, Project, PromptRun } from "./types.js";
+import type { Clip, Project, PromptRun, ReviewItem, TimelineSegment } from "./types.js";
 
 export function formatProjectStatus(project: Project) {
   const latest = project.runs.at(-1);
@@ -32,6 +32,24 @@ export function formatRun(run: PromptRun) {
   return [...header, "", ...decisions].join("\n");
 }
 
+export function formatTimeline(segments: TimelineSegment[]) {
+  if (!segments.length) {
+    return "No timeline segments. Add clips and run ask first.";
+  }
+  return segments
+    .map((segment) => {
+      return `${segment.index}. ${segment.timelineIn}s to ${segment.timelineOut}s | ${segment.role} | ${segment.label}\n   Source: ${segment.path} ${segment.sourceIn}s to ${segment.sourceOut}s\n   ${segment.rationale}`;
+    })
+    .join("\n");
+}
+
+export function formatReview(items: ReviewItem[]) {
+  const score = items.reduce((total, item) => total + (item.status === "pass" ? 2 : item.status === "warn" ? 1 : 0), 0);
+  const possible = items.length * 2;
+  const lines = items.map((item) => `${item.status.toUpperCase()} | ${item.title}: ${item.detail}`);
+  return [`Readiness: ${score}/${possible}`, "", ...lines].join("\n");
+}
+
 export function formatHelp() {
   return [
     "Craon Studio CLI",
@@ -41,8 +59,11 @@ export function formatHelp() {
     "  add <path> --label <text> --duration <seconds> --role <role> --mood <mood> --notes <text>",
     "  ask <prompt>",
     "  plan",
+    "  timeline",
     "  export",
+    "  review",
     "  status",
+    "  brief <text>",
     "  demo",
     "",
     "Examples:",

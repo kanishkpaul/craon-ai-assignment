@@ -68,6 +68,28 @@ export type ExportManifest = {
   files: string[];
 };
 
+export type TimelineSegment = {
+  index: number;
+  clipId: string;
+  label: string;
+  path: string;
+  role: ClipRole;
+  sourceIn: number;
+  sourceOut: number;
+  timelineIn: number;
+  timelineOut: number;
+  duration: number;
+  rationale: string;
+};
+
+export type ReviewStatus = "pass" | "warn" | "fail";
+
+export type ReviewItem = {
+  status: ReviewStatus;
+  title: string;
+  detail: string;
+};
+
 export type Project = {
   name: string;
   brief: string;

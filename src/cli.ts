@@ -1,9 +1,11 @@
 import { createId } from "./ids.js";
 import { createDemoProject } from "./demo.js";
 import { exportRun } from "./exporter.js";
-import { formatClip, formatHelp, formatProjectStatus, formatRun } from "./format.js";
+import { formatClip, formatHelp, formatProjectStatus, formatReview, formatRun, formatTimeline } from "./format.js";
 import { planPrompt } from "./planner.js";
+import { reviewProject } from "./review.js";
 import { createProject, ensureProject, loadProject, saveProject } from "./storage.js";
+import { buildTimeline } from "./timeline.js";
 import type { Clip, ClipMood, ClipRole, Project } from "./types.js";
 
 type ParsedArgs = {
@@ -37,11 +39,20 @@ async function dispatch(parsed: ParsedArgs, cwd: string) {
   if (parsed.command === "plan") {
     return planCommand(cwd);
   }
+  if (parsed.command === "timeline") {
+    return timelineCommand(cwd);
+  }
   if (parsed.command === "export") {
     return exportCommand(cwd);
   }
+  if (parsed.command === "review") {
+    return reviewCommand(cwd);
+  }
   if (parsed.command === "status") {
     return statusCommand(cwd);
+  }
+  if (parsed.command === "brief") {
+    return briefCommand(parsed, cwd);
   }
   if (parsed.command === "demo") {
     return demoCommand(cwd);
@@ -131,6 +142,15 @@ async function planCommand(cwd: string) {
   return formatRun(run);
 }
 
+async function timelineCommand(cwd: string) {
+  const project = await ensureProject(cwd);
+  const run = project.runs.at(-1);
+  if (!run) {
+    return "No prompt run yet. Run npm run cli -- ask \"your edit prompt\".";
+  }
+  return formatTimeline(buildTimeline(project, run));
+}
+
 async function exportCommand(cwd: string) {
   const project = await ensureProject(cwd);
   const run = project.runs.at(-1);
@@ -144,10 +164,27 @@ async function exportCommand(cwd: string) {
   return [`Exported run: ${run.id}`, `Directory: ${manifest.directory}`, `Files: ${manifest.files.join(", ")}`].join("\n");
 }
 
+async function reviewCommand(cwd: string) {
+  const project = await ensureProject(cwd);
+  return formatReview(reviewProject(project));
+}
+
 async function statusCommand(cwd: string) {
   const project = await ensureProject(cwd);
   const clips = project.clips.length ? project.clips.map(formatClip).join("\n") : "No clips yet";
   return `${formatProjectStatus(project)}\n\nClips:\n${clips}`;
+}
+
+async function briefCommand(parsed: ParsedArgs, cwd: string) {
+  const project = await ensureProject(cwd);
+  const brief = parsed.values.join(" ").trim();
+  if (!brief) {
+    throw new Error("Missing brief text.");
+  }
+  project.brief = brief;
+  touch(project);
+  await saveProject(cwd, project);
+  return `Updated brief: ${project.brief}`;
 }
 
 async function demoCommand(cwd: string) {
