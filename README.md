@@ -55,3 +55,7 @@ Environment variables:
 - `render` uses ffmpeg to create an MP4 from the latest timeline.
 - `samples --write` regenerates the 20 prompt sample output artifact.
 - `llama` checks whether the local llama.cpp server is reachable.
+
+## License
+
+This project is licensed under PolyForm Noncommercial License 1.0.0. Commercial use is not permitted without separate written permission.
