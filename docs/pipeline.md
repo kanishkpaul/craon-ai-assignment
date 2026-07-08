@@ -33,6 +33,9 @@ The pipeline is designed to make the trimming reasoning inspectable. Every stage
    - `timeline.csv`
    - `ffmpeg-plan.txt`
 
+9. Render
+   The `render` command uses ffmpeg to create an MP4 from the latest timeline.
+
 ## Data flow
 
 ```text
@@ -43,6 +46,7 @@ Edit decisions
 Timeline segments
 Readiness review
 Export package
+Rendered MP4
 ```
 
 ## Why this structure

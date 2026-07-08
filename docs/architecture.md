@@ -1,6 +1,6 @@
 # Architecture
 
-Craon Studio is a local TypeScript CLI prototype for prompt-led video trimming. It does not render final video yet. It turns a natural language edit request into a flexible trim intent, structured edit decisions, a timeline, readiness feedback, and handoff files that a video renderer or editor could consume.
+Craon Studio is a local TypeScript CLI prototype for prompt-led video trimming. It turns a natural language edit request into a flexible trim intent, structured edit decisions, a timeline, readiness feedback, handoff files, and an optional rendered MP4.
 
 ## Runtime shape
 
@@ -10,6 +10,7 @@ Craon Studio is a local TypeScript CLI prototype for prompt-led video trimming. 
 - `src/llama.ts` calls a local llama.cpp server for AI intent parsing.
 - `src/planner.ts` normalizes trim intent and creates edit decisions.
 - `src/timeline.ts` converts a prompt run into source and output cuts.
+- `src/renderer.ts` renders the latest timeline into MP4 through ffmpeg.
 - `src/review.ts` scores whether the project is ready to hand off.
 - `src/exporter.ts` writes the final handoff package.
 - `src/samples.ts` generates the 20 prompt sample outputs.
@@ -55,4 +56,4 @@ The planner selects clips by role, mood match, and whether the source duration f
 
 ## Prototype limits
 
-The current prototype creates edit instructions and files. A production version would connect the same manifest to ffmpeg, a non-linear editor API, or a media agent that performs scene detection, speech transcription, visual scoring, and final render operations.
+The current prototype creates edit instructions, handoff files, and a rendered MP4. A production version would improve the renderer with scene detection, speech transcription, visual scoring, audio mixing, and non-linear editor integration.

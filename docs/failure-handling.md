@@ -15,6 +15,8 @@ The prototype handles the common failure modes directly in the CLI and surfaces 
 | Empty prompt | `ask` fails with `Missing prompt`. |
 | No footage | `ask` fails until at least one clip exists. |
 | No prompt run | `plan`, `timeline`, and `export` explain that a prompt run is needed. |
+| ffmpeg unavailable | `render` fails with `ffmpeg is required for rendering`. |
+| Source file missing | `render` fails before writing output if a timeline input is unreadable. |
 | llama.cpp unavailable | `ask --ai` falls back to the heuristic planner and includes the failure reason. |
 | Invalid llama.cpp JSON | `ask --ai` falls back to the heuristic planner instead of blocking the workflow. |
 

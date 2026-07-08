@@ -65,6 +65,7 @@ export function formatHelp() {
     "  plan",
     "  timeline",
     "  export",
+    "  render",
     "  review",
     "  status",
     "  brief <text>",

@@ -11,6 +11,10 @@ type LlamaChatOutput = {
   }>;
 };
 
+type LlamaCompletionOutput = {
+  content?: string;
+};
+
 const platforms = new Set<Platform>(["shorts", "reels", "youtube", "linkedin", "cinematic"]);
 const aspects = new Set<AspectRatio>(["9:16", "16:9", "1:1", "4:5"]);
 const paces = new Set<PromptIntent["pace"]>(["cut fast", "steady", "slow burn"]);
@@ -38,55 +42,43 @@ export async function checkLlama(env: RuntimeEnv) {
 
 async function interpretPromptWithLlama(prompt: string, clips: Clip[], env: RuntimeEnv) {
   const fallback = inferTrimIntent(prompt);
-  const response = await fetch(`${llamaBaseUrl(env)}/v1/chat/completions`, {
+  const response = await fetch(`${llamaBaseUrl(env)}/completion`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     signal: AbortSignal.timeout(Number(env.LLAMA_CPP_TIMEOUT_MS ?? 5000)),
     body: JSON.stringify({
-      model: env.LLAMA_CPP_MODEL || "local-model",
+      prompt: createCompletionPrompt(prompt, clips, fallback),
       temperature: 0.15,
-      messages: [
-        {
-          role: "system",
-          content: [
-            "You are the intent parser for a flexible video trimming engine.",
-            "Return only JSON. No prose.",
-            "Schema keys: objective, platform, aspectRatio, pace, tone, targetSeconds, preserve, remove, semanticPriorities, operations, customDirectives, confidence.",
-            "Supported platform values: shorts, reels, youtube, linkedin, cinematic.",
-            "Supported aspectRatio values: 9:16, 16:9, 1:1, 4:5.",
-            "Supported pace values: cut fast, steady, slow burn.",
-            "Supported tone values: raw, warm, urgent, cinematic, quiet, playful, focused.",
-            "For unsupported user requests, infer the closest edit and put new needs into customDirectives."
-          ].join(" ")
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            prompt,
-            clips: clips.map((clip) => ({
-              label: clip.label,
-              duration: clip.duration,
-              role: clip.role,
-              mood: clip.mood,
-              notes: clip.notes
-            })),
-            fallback
-          })
-        }
-      ]
+      n_predict: Number(env.LLAMA_CPP_MAX_TOKENS ?? 180),
+      stop: ["\n\n"]
     })
   });
   if (!response.ok) {
     throw new Error(`llama.cpp request failed with ${response.status}`);
   }
-  const data = (await response.json()) as LlamaChatOutput;
+  const data = (await response.json()) as LlamaCompletionOutput;
   return normalizeTrimIntent(extractJson(data), fallback);
 }
 
-function extractJson(data: LlamaChatOutput) {
-  const text = data.choices?.[0]?.message?.content ?? "";
+function createCompletionPrompt(prompt: string, clips: Clip[], fallback: TrimIntent) {
+  return [
+    "Return only minified JSON for a video trim intent.",
+    "Keys: objective, platform, aspectRatio, pace, tone, targetSeconds, preserve, remove, semanticPriorities, operations, customDirectives, confidence.",
+    "Allowed platform: shorts, reels, youtube, linkedin, cinematic.",
+    "Allowed aspectRatio: 9:16, 16:9, 1:1, 4:5.",
+    "Allowed pace: cut fast, steady, slow burn.",
+    "Allowed tone: raw, warm, urgent, cinematic, quiet, playful, focused.",
+    `Prompt: ${prompt}`,
+    `Clips: ${JSON.stringify(clips.map((clip) => ({ label: clip.label, role: clip.role, mood: clip.mood, duration: clip.duration })))}`,
+    `Fallback: ${JSON.stringify(fallback)}`,
+    "JSON:"
+  ].join("\n");
+}
+
+function extractJson(data: LlamaCompletionOutput | LlamaChatOutput) {
+  const text = isCompletionOutput(data) ? data.content ?? "" : data.choices?.[0]?.message?.content ?? "";
   const trimmed = text.trim();
   const start = trimmed.indexOf("{");
   const end = trimmed.lastIndexOf("}");
@@ -94,6 +86,10 @@ function extractJson(data: LlamaChatOutput) {
     throw new Error("llama.cpp response did not contain JSON");
   }
   return JSON.parse(trimmed.slice(start, end + 1)) as Partial<TrimIntent>;
+}
+
+function isCompletionOutput(data: LlamaCompletionOutput | LlamaChatOutput): data is LlamaCompletionOutput {
+  return Object.prototype.hasOwnProperty.call(data, "content");
 }
 
 function normalizeTrimIntent(value: Partial<TrimIntent>, fallback: TrimIntent): TrimIntent {

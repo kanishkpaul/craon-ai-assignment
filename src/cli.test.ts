@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
@@ -11,19 +11,22 @@ afterEach(async () => {
 });
 
 describe("runCli", () => {
-  it("runs a full demo, review, export workflow", async () => {
+  it("runs a full demo, review, export, render workflow", async () => {
     const cwd = await tempProject();
     const demo = await runCliWithEnv(["demo"], cwd, {});
     expect(demo).toContain("Created demo project");
+    await copyDemoFootage(cwd);
     const timeline = await runCliWithEnv(["timeline"], cwd, {});
     expect(timeline).toContain("Opening motion establishes the edit");
     const exportOutput = await runCliWithEnv(["export"], cwd, {});
     expect(exportOutput).toContain("timeline.csv");
+    const renderMessage = await runCliWithEnv(["render"], cwd, {});
+    expect(renderMessage).toContain(".craon/renders");
     const review = await runCliWithEnv(["review"], cwd, {});
     expect(review).toContain("Readiness: 16/16");
     const project = await readFile(join(cwd, ".craon", "project.json"), "utf8");
     expect(project).toContain("\"exports\"");
-  });
+  }, 20000);
 
   it("supports init, add, ask, and brief commands", async () => {
     const cwd = await tempProject();
@@ -65,4 +68,8 @@ async function tempProject() {
   const directory = await mkdtemp(join(tmpdir(), "craon-cli-"));
   directories.push(directory);
   return directory;
+}
+
+async function copyDemoFootage(cwd: string) {
+  await cp(join(process.cwd(), "assets"), join(cwd, "assets"), { recursive: true });
 }

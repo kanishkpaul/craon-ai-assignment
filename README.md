@@ -20,6 +20,7 @@ npm run cli -- status
 npm run cli -- timeline
 npm run cli -- review
 npm run cli -- export
+npm run cli -- render
 npm run samples
 ```
 
@@ -41,6 +42,7 @@ Environment variables:
 - `LLAMA_CPP_URL` defaults to `http://127.0.0.1:8080`.
 - `LLAMA_CPP_MODEL` defaults to `local-model`.
 - `LLAMA_CPP_TIMEOUT_MS` defaults to `5000`.
+- `LLAMA_CPP_MAX_TOKENS` defaults to `240`.
 
 ## Commands
 
@@ -50,5 +52,6 @@ Environment variables:
 - `timeline` prints the planned source and output cuts.
 - `review` checks whether the project is ready to hand off.
 - `export` writes an edit plan, captions, rundown, timeline CSV, and implementation notes.
+- `render` uses ffmpeg to create an MP4 from the latest timeline.
 - `samples --write` regenerates the 20 prompt sample output artifact.
 - `llama` checks whether the local llama.cpp server is reachable.

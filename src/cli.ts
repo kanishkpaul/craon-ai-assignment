@@ -4,6 +4,7 @@ import { exportRun } from "./exporter.js";
 import { formatClip, formatHelp, formatProjectStatus, formatReview, formatRun, formatTimeline } from "./format.js";
 import { checkLlama, planPromptWithLlama } from "./llama.js";
 import { planPrompt } from "./planner.js";
+import { renderRun } from "./renderer.js";
 import { reviewProject } from "./review.js";
 import { formatSampleOutputs, writeSampleOutputs } from "./samples.js";
 import { createProject, ensureProject, loadProject, saveProject } from "./storage.js";
@@ -50,6 +51,9 @@ async function dispatch(parsed: ParsedArgs, cwd: string, env: Record<string, str
   }
   if (parsed.command === "export") {
     return exportCommand(cwd);
+  }
+  if (parsed.command === "render") {
+    return renderCommand(cwd);
   }
   if (parsed.command === "review") {
     return reviewCommand(cwd);
@@ -187,6 +191,16 @@ async function exportCommand(cwd: string) {
   touch(project);
   await saveProject(cwd, project);
   return [`Exported run: ${run.id}`, `Directory: ${manifest.directory}`, `Files: ${manifest.files.join(", ")}`].join("\n");
+}
+
+async function renderCommand(cwd: string) {
+  const project = await ensureProject(cwd);
+  const run = project.runs.at(-1);
+  if (!run) {
+    return "No prompt run to render.";
+  }
+  const output = await renderRun(cwd, project, run);
+  return `Rendered video: ${output}`;
 }
 
 async function reviewCommand(cwd: string) {
